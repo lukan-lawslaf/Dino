@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dinosaur 3D Demo</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #0e0e10; color: #f2f2f2; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    header { text-align: center; padding: 28px 16px 8px; }
+    header h1 { margin: 0 0 4px; font-size: 1.5rem; letter-spacing: .5px; }
+    header p { margin: 0; color: #9aa0a6; font-size: .9rem; }
+    .picker { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 20px 16px; }
+    .picker button {
+      background: #1c1c20; color: #f2f2f2; border: 1px solid #33343a;
+      padding: 10px 18px; border-radius: 999px; cursor: pointer; font-size: .95rem;
+      transition: all .15s ease;
+    }
+    .picker button:hover { border-color: #ff7a45; }
+    .picker button.active { background: #ff7a45; border-color: #ff7a45; color: #111; font-weight: 600; }
+    .viewer {
+      width: min(1000px, 94vw); aspect-ratio: 16 / 10;
+      border-radius: 14px; overflow: hidden; border: 1px solid #26272d;
+      background: #000; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .viewer iframe { width: 100%; height: 100%; border: 0; }
+    .credit { padding: 14px 16px 40px; font-size: .82rem; color: #8a9096; text-align: center; }
+    .credit a { color: #ff9a6c; }
+    .hint { margin-top: 6px; color: #6b7075; font-size: .78rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🦕 Dinosaur 3D / 360° Demo</h1>
+    <p>Real rotatable + zoomable models — drag to orbit, scroll to zoom. Same <code>model_3d_url</code> the API returns.</p>
+  </header>
+
+  <div class="picker" id="picker"></div>
+
+  <div class="viewer">
+    <iframe id="frame" title="3D dinosaur model" allow="autoplay; fullscreen; xr-spatial-tracking"
+      allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+  </div>
+
+  <div class="credit" id="credit"></div>
+
+  <script>
+    // These are the exact values stored in the SQLite DB / returned by GET /dinosaurs/{name}/model
+    const DINOS = [
+      {
+        name: "Tyrannosaurus",
+        embed: "https://sketchfab.com/models/77e21c4e5d65468bbe11780ae0557b95/embed?autospin=0.3&autostart=1&ui_theme=dark",
+        source: "https://sketchfab.com/3d-models/none-77e21c4e5d65468bbe11780ae0557b95",
+        credit: '"Tyrannosaurus Rex skeleton" by Rigsters (CC, via Sketchfab)'
+      },
+      {
+        name: "Triceratops",
+        embed: "https://sketchfab.com/models/06cb55f941d94dc8b95ac46f92d89e7c/embed?autospin=0.3&autostart=1&ui_theme=dark",
+        source: "https://sketchfab.com/3d-models/none-06cb55f941d94dc8b95ac46f92d89e7c",
+        credit: '"Animated triceratops skeleton" by Zacxophone (CC, via Sketchfab)'
+      },
+      {
+        name: "Stegosaurus",
+        embed: "https://sketchfab.com/models/e06271daec3b431388640435f211f874/embed?autospin=0.3&autostart=1&ui_theme=dark",
+        source: "https://sketchfab.com/3d-models/none-e06271daec3b431388640435f211f874",
+        credit: '"Dino Fight" by Pedro B. Goulart (CC, via Sketchfab)'
+      }
+    ];
+
+    const picker = document.getElementById("picker");
+    const frame = document.getElementById("frame");
+    const credit = document.getElementById("credit");
+
+    function select(i) {
+      const d = DINOS[i];
+      frame.src = d.embed;
+      credit.innerHTML = d.credit + ' &middot; <a href="' + d.source + '" target="_blank" rel="noopener">view on Sketchfab</a>' +
+        '<div class="hint">Tip: drag to rotate 360°, scroll to zoom, double-click to focus.</div>';
+      [...picker.children].forEach((b, k) => b.classList.toggle("active", k === i));
+    }
+
+    DINOS.forEach((d, i) => {
+      const b = document.createElement("button");
+      b.textContent = d.name;
+      b.onclick = () => select(i);
+      picker.appendChild(b);
+    });
+
+    select(0);
+  </script>
+</body>
+</html>

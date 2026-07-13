@@ -1,0 +1,11 @@
+.env
+frountend/mcp.md
+
+__pycache__/
+*.pyc
+
+*.log
+
+backend/dinosaurs.db
+
+archive.zip
