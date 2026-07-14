@@ -16,6 +16,7 @@ class Dinosaur(Base):
     region: Mapped[str | None] = mapped_column(String, nullable=True)
     period: Mapped[str | None] = mapped_column(String, nullable=True)
     length_m: Mapped[float | None] = mapped_column(Float, nullable=True)
+    height_m: Mapped[float | None] = mapped_column(Float, nullable=True)
     weight: Mapped[float | None] = mapped_column(Float, nullable=True)
     taxonomy: Mapped[str | None] = mapped_column(String, nullable=True)
     named_by: Mapped[str | None] = mapped_column(String, nullable=True)

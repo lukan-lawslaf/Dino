@@ -1,0 +1,30 @@
+services:
+  # ── Backend: FastAPI ──────────────────────────────────────────────────────
+  - type: web
+    name: rayquaza-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: CORS_ORIGINS
+        value: https://rayquaza-frontend.onrender.com,http://localhost:5173
+      - key: DATABASE_URL
+        value: sqlite:///./dinosaurs.db
+    healthCheckPath: /
+
+  # ── Frontend: React/Vite static site ─────────────────────────────────────
+  - type: web
+    name: rayquaza-frontend
+    runtime: static
+    rootDir: frountend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE
+        value: https://rayquaza-api.onrender.com
+    routes:
+      # SPA fallback — all routes serve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html

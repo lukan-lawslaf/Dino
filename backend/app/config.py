@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     pbdb_base_url: str = "https://paleobiodb.org/data1.2/occs/list.json"
     pbdb_request_delay_seconds: float = 0.5
     database_url: str = "sqlite:///./dinosaurs.db"
-    cors_origins: str = "http://localhost:3000,http://localhost:5173"
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:5174,https://*.onrender.com"
     dino_facts_csv: str = "../dino_facts.csv"
     dino_stats_csv: str = "../dino_stats.csv"
     news_feeds: str = (
