@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer utilities {
+  .text-mega {
+    font-size: 21vw;
+    line-height: 0.75;
+    letter-spacing: -0.04em;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #fcfcfc;
+  color: #111;
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #000;
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------
+   Inner app screens (Encyclopedia / Detail / Compare / News).
+   Palette matches facts.app: warm charcoal dark + soft off-white light.
+   Themeable via data-theme on the .app-shell wrapper.
+----------------------------------------------------------------*/
+.app-shell {
+  --app-bg: #16181c;          /* warm near-black */
+  --app-bg-2: #1d2025;        /* raised surface */
+  --app-surface: rgba(255,255,255,0.04);
+  --app-surface-hover: rgba(255,255,255,0.07);
+  --app-border: rgba(255,255,255,0.08);
+  --app-text: #f4f3ef;
+  --app-muted: #9aa0a6;
+  --app-faint: #6b7178;
+  --app-invert-bg: #ffffff;   /* "active pill" bg */
+  --app-invert-text: #16181c;
+
+  background: var(--app-bg);
+  color: var(--app-text);
+  min-height: 100vh;
+}
+
+.app-shell[data-theme="light"] {
+  --app-bg: #faf9f6;
+  --app-bg-2: #ffffff;
+  --app-surface: rgba(0,0,0,0.04);
+  --app-surface-hover: rgba(0,0,0,0.07);
+  --app-border: rgba(0,0,0,0.10);
+  --app-text: #16181c;
+  --app-muted: #5f6368;
+  --app-faint: #9aa0a6;
+  --app-invert-bg: #16181c;
+  --app-invert-text: #ffffff;
+}
+
+/* thin scrollbar for app surfaces */
+.app-shell ::-webkit-scrollbar { width: 8px; height: 8px; }
+.app-shell ::-webkit-scrollbar-thumb { background: var(--app-border); border-radius: 4px; }
+.app-shell ::-webkit-scrollbar-track { background: transparent; }
+
+/* Theme-aware helper utilities used across the inner app screens */
+.app-shell .t-muted { color: var(--app-muted); }
+.app-shell .t-faint { color: var(--app-faint); }
+.app-shell .surface { background: var(--app-surface); border: 1px solid var(--app-border); }
+.app-shell .surface-plain { background: var(--app-surface); }
+.app-shell .b-app { border-color: var(--app-border) !important; }
+.app-shell .pill-active { background: var(--app-invert-bg); color: var(--app-invert-text); }
+.app-shell .hover-surface:hover { background: var(--app-surface-hover); }
+.app-shell .hover-border:hover { border-color: var(--app-muted); }
+.app-shell .hover-invert:hover { background: var(--app-invert-bg); color: var(--app-invert-text); }

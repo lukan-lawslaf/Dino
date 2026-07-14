@@ -9,3 +9,5 @@ __pycache__/
 backend/dinosaurs.db
 
 archive.zip
+
+frountend/.env

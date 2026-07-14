@@ -23,6 +23,7 @@ class DinosaurSummary(BaseModel):
     diet: str | None
     period: str | None
     length_m: float | None
+    height_m: float | None
     weight: float | None
     image_thumb_url: str | None
 
@@ -38,6 +39,7 @@ class DinosaurDetail(BaseModel):
     region: str | None
     period: str | None
     length_m: float | None
+    height_m: float | None
     weight: float | None
     taxonomy: str | None
     named_by: str | None

@@ -4,6 +4,9 @@ database. By default it only queries a curated list of famous genera (fast); pas
 already have a model unless --force is passed.
 
 Usage:  python -m app.ingest.backfill_models [--all] [--force]
+
+Use --force after changing the matching rules. It deliberately clears any
+existing mapping for which Sketchfab no longer has a direct, safe genus match.
 """
 import logging
 import sys
