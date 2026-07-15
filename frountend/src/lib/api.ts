@@ -2,7 +2,7 @@
 // In dev, requests go through Vite's /api proxy -> http://localhost:8000.
 // Override with VITE_API_BASE if the backend lives elsewhere.
 
-const BASE = import.meta.env.VITE_API_BASE ?? "/api";
+const BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/+$/, "");
 
 // ---- Types (mirror app/schemas.py) ----
 
@@ -87,13 +87,20 @@ export interface PaginatedNews {
 // ---- Fetch helper ----
 
 async function get<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
-  const url = new URL(BASE + path, window.location.origin);
+  // If BASE is set (production), use it as absolute URL prefix.
+  // Otherwise fall back to /api relative path (handled by Vite proxy in dev).
+  const prefix = BASE || "/api";
+  const url = BASE
+    ? new URL(prefix + path)
+    : new URL(prefix + path, window.location.origin);
+
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
     }
   }
-  const res = await fetch(url.toString().replace(window.location.origin, ""), {
+
+  const res = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
   });
   if (!res.ok) {
