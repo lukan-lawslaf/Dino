@@ -11,6 +11,11 @@ services:
         value: https://rayquaza-frontend.onrender.com,http://localhost:5173
       - key: DATABASE_URL
         value: sqlite:///./dinosaurs.db
+      # Set both in the Render dashboard (sync: false = not stored in this file).
+      - key: NEWSAPI_KEY
+        sync: false
+      - key: NEWS_REFRESH_TOKEN
+        sync: false
     healthCheckPath: /
 
   # ── Frontend: React/Vite static site ─────────────────────────────────────
@@ -28,3 +33,21 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+
+  # ── Cron: refresh dinosaur news ───────────────────────────────────────────
+  # A cron job runs in its OWN container, so it can't write to the web service's
+  # SQLite file. Instead it calls the API's protected /news/refresh endpoint, so
+  # the DB write happens in the process that owns the database. Runs daily at
+  # 06:17 UTC — change to "17 6 */2 * *" for every 2 days.
+  - type: cron
+    name: rayquaza-news-refresh
+    runtime: python
+    rootDir: backend
+    schedule: "17 6 * * *"
+    startCommand: >-
+      python -c "import os, urllib.request as u; r = u.Request(os.environ['API_URL'] + '/news/refresh', method='POST'); r.add_header('X-Refresh-Token', os.environ['NEWS_REFRESH_TOKEN']); print(u.urlopen(r, timeout=600).read().decode())"
+    envVars:
+      - key: API_URL
+        value: https://rayquaza-api.onrender.com
+      - key: NEWS_REFRESH_TOKEN
+        sync: false

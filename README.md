@@ -40,7 +40,32 @@ Images come from Wikipedia/Wikimedia Commons; 3D models come from the Sketchfab 
 python -m app.ingest.refresh_news
 ```
 
-Fetches articles from the RSS feeds listed in `NEWS_FEEDS` (`.env`, format `Name|url,Name|url,...` — currently ScienceDaily, BBC, and Dinosaur Society) and upserts them into `news_articles`, deduped by article link. Safe to re-run any time (e.g. on a daily cron/scheduled task) — it only adds articles it hasn't seen before, so it never creates duplicates and never touches existing rows.
+Searches the web for the latest dinosaur/fossil/palaeontology news and upserts it into
+`news_articles`, deduped by article link. Safe to re-run any time — it only adds articles
+it hasn't seen before, so it never creates duplicates.
+
+**Source selection**
+
+- **If `NEWSAPI_KEY` is set** (`.env`) — web-wide search via [NewsAPI.org](https://newsapi.org)
+  `/v2/everything`, so articles come from any of thousands of publishers, not a fixed list.
+  Results are ranked by relevancy and then filtered by a keyword gate (an article must
+  mention a dinosaur/palaeo term and must not mention "fossil fuel" etc., which otherwise
+  floods results with energy/climate news). Free "Developer" tier covers this: 100
+  requests/day, articles delayed ~24h, last-month window — one request per refresh, so a
+  daily run is well within it. Note the free tier is licensed for development use only.
+- **If `NEWSAPI_KEY` is unset** — falls back to the curated RSS feeds in `NEWS_FEEDS`
+  (`.env`, format `Name|url,Name|url,...`).
+
+**Images** — NewsAPI supplies `urlToImage` for most articles; for any article still
+missing an image, the page's `og:image` is scraped so the UI shows a real thumbnail.
+Existing image-less rows are topped up too, capped at 40 per run.
+
+**Scheduled runs (Render)** — `render.yaml` defines a `rayquaza-news-refresh` cron that
+runs daily at 06:17 UTC (change to `"17 6 */2 * *"` for every 2 days). A cron job runs in
+its own container and so cannot write to the web service's SQLite file; instead it POSTs
+to the API's protected `POST /news/refresh` endpoint, so the write happens in the process
+that owns the database. Set `NEWS_REFRESH_TOKEN` (any random string — the endpoint refuses
+to run without one) in the Render dashboard for both services.
 
 ## 2. Start the API server
 
@@ -59,11 +84,17 @@ Server runs at `http://localhost:8000`. Interactive docs at `http://localhost:80
 - `GET /dinosaurs/filter?diet=&period=&region=` — filter by diet/period/region
 - `GET /fossils/{name}` — raw fossil occurrence records for map plotting
 - `GET /news?page=&page_size=&source=` — paginated news feed, newest first, optional source filter
+- `POST /news/refresh` — run a news refresh in-process. Requires an `X-Refresh-Token`
+  header matching `NEWS_REFRESH_TOKEN` (401 otherwise; 503 if the token is unset).
+  Used by the Render cron job; returns `{added, skipped, enriched, backfilled}`.
 
 ## Frontend notes
 
 - **Images** (`image_thumb_url`, `image_url`): direct Wikimedia Commons URLs, safe to `<img>`.
 - **360°/3D** (`model_3d_url`): a Sketchfab embed URL — drop it straight into an `<iframe>` for a rotatable/zoomable 360° viewer. Show `model_3d_attribution` and link `model_3d_source_url` to credit the CC creator. Genera without a model return `null` for these fields, so guard for that in the UI.
-- **News tab**: `GET /news` for the feed list. `source_name` is one of `ScienceDaily`, `BBC`, `Dinosaur Society` — usable for a filter/tab UI. `published_at` is ISO 8601 or `null` if the source didn't provide a date (sorts last). `image_url` is only populated for sources that include one (currently BBC); guard for `null` elsewhere.
+- **News tab**: `GET /news` for the feed list. `source_name` is whichever publisher the
+  article came from (many, with NewsAPI) — usable for a filter/tab UI. `published_at` is
+  ISO 8601 or `null` if the source didn't provide a date (sorts last). `image_url` is
+  populated for most articles but can be `null` — guard for that in the UI.
 
 CORS is enabled for the origins listed in `CORS_ORIGINS` (defaults to `localhost:3000` and `localhost:5173`) so a local React dev server can call the API directly.
