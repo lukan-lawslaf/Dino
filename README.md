@@ -60,12 +60,16 @@ it hasn't seen before, so it never creates duplicates.
 missing an image, the page's `og:image` is scraped so the UI shows a real thumbnail.
 Existing image-less rows are topped up too, capped at 40 per run.
 
-**Scheduled runs (Render)** — `render.yaml` defines a `rayquaza-news-refresh` cron that
-runs daily at 06:17 UTC (change to `"17 6 */2 * *"` for every 2 days). A cron job runs in
-its own container and so cannot write to the web service's SQLite file; instead it POSTs
-to the API's protected `POST /news/refresh` endpoint, so the write happens in the process
-that owns the database. Set `NEWS_REFRESH_TOKEN` (any random string — the endpoint refuses
-to run without one) in the Render dashboard for both services.
+**Scheduled runs (GitHub Actions)** — `.github/workflows/refresh-news.yml` runs daily at
+06:17 UTC (change the `cron:` line to `"17 6 */2 * *"` for every 2 days) and can also be
+triggered by hand from the repo's **Actions** tab. It POSTs to the API's protected
+`POST /news/refresh` endpoint, so the write happens in the process that owns the database.
+Render cron jobs are paid on the Hobby plan, hence GitHub Actions.
+
+Set these **repository secrets** (repo → Settings → Secrets and variables → Actions):
+`API_URL` (e.g. `https://rayquaza-api.onrender.com`) and `NEWS_REFRESH_TOKEN` (any random
+string — the endpoint refuses to run without one). `NEWS_REFRESH_TOKEN` must also be set
+on the `rayquaza-api` Render service, matching.
 
 ## 2. Start the API server
 

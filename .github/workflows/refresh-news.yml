@@ -1,0 +1,57 @@
+name: Refresh dinosaur news
+
+# Runs on GitHub's servers (free) and just calls the API's protected refresh endpoint.
+# Render cron jobs are paid on the Hobby plan, so the schedule lives here instead.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   API_URL            e.g. https://rayquaza-api.onrender.com
+#   NEWS_REFRESH_TOKEN must match NEWS_REFRESH_TOKEN on the rayquaza-api service
+#
+# Note: scheduled workflows only run from the default branch, and GitHub disables them
+# after 60 days of no repository activity — re-enable from the Actions tab if that happens.
+
+on:
+  schedule:
+    # Daily at 06:17 UTC. Use "17 6 */2 * *" for every 2 days.
+    - cron: "17 6 * * *"
+  # Lets you run it by hand from the Actions tab ("Run workflow").
+  workflow_dispatch:
+
+# Never let two refreshes overlap.
+concurrency:
+  group: refresh-news
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger news refresh
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          NEWS_REFRESH_TOKEN: ${{ secrets.NEWS_REFRESH_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${API_URL:-}" ] || [ -z "${NEWS_REFRESH_TOKEN:-}" ]; then
+            echo "::error::API_URL and NEWS_REFRESH_TOKEN repository secrets must be set."
+            exit 1
+          fi
+
+          # The API is on the free tier and may be asleep; allow time for a cold start
+          # and retry transient failures. The endpoint is idempotent (articles are
+          # deduped by link), so a retry is safe.
+          code=$(curl -sS \
+            --max-time 600 \
+            --retry 3 --retry-delay 20 --retry-connrefused \
+            -o response.json -w '%{http_code}' \
+            -X POST "${API_URL}/news/refresh" \
+            -H "X-Refresh-Token: ${NEWS_REFRESH_TOKEN}")
+
+          echo "HTTP ${code}"
+          cat response.json; echo
+
+          if [ "${code}" != "200" ]; then
+            echo "::error::News refresh failed with HTTP ${code}. 401 = token mismatch, 503 = NEWS_REFRESH_TOKEN missing on rayquaza-api."
+            exit 1
+          fi
