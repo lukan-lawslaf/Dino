@@ -1,0 +1,14 @@
+/.env
+/.agents/
+/.claude/
+/backend/
+/archive.zip
+/kaggleds.zip
+/dino_facts.csv
+/dino_stats.csv
+/desktop.ini
+/frountend/.env
+/frountend/.env.*
+/frountend/node_modules/
+/frountend/dist/
+/frountend/mcp.md

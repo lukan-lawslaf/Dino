@@ -115,7 +115,7 @@ export default function Encyclopedia() {
 
         {error && (
           <div className="text-center text-red-400 py-10">
-            Couldn't reach the API ({error}). Is the backend running on :8000?
+            Couldn't load the dinosaurs. Please refresh to try again. ({error})
           </div>
         )}
 
@@ -131,6 +131,7 @@ export default function Encyclopedia() {
         {loading && (
           <div className="flex justify-center py-10 t-muted">
             <Loader2 className="animate-spin" />
+            <span className="ml-3" role="status">Loading dinosaurs. The first visit may take about a minute.</span>
           </div>
         )}
 

@@ -87,12 +87,9 @@ export interface PaginatedNews {
 // ---- Fetch helper ----
 
 async function get<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
-  // If BASE is set (production), use it as absolute URL prefix.
-  // Otherwise fall back to /api relative path (handled by Vite proxy in dev).
+  // Both relative same-origin prefixes and explicit backend origins are supported.
   const prefix = BASE || "/api";
-  const url = BASE
-    ? new URL(prefix + path)
-    : new URL(prefix + path, window.location.origin);
+  const url = new URL(prefix + path, window.location.origin);
 
   if (params) {
     for (const [k, v] of Object.entries(params)) {
@@ -100,13 +97,27 @@ async function get<T>(path: string, params?: Record<string, string | number | un
     }
   }
 
-  const res = await fetch(url.toString(), {
-    headers: { Accept: "application/json" },
-  });
-  if (!res.ok) {
-    throw new Error(`API ${res.status}: ${res.statusText} (${path})`);
+  // A sleeping free backend can take a minute to wake. Retry only these reads.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch(url.toString(), {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(90_000),
+      });
+    } catch (error) {
+      if (attempt === 2) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1500 * 2 ** attempt));
+      continue;
+    }
+    if ([502, 503, 504].includes(res.status) && attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 1500 * 2 ** attempt));
+      continue;
+    }
+    if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText} (${path})`);
+    return (await res.json()) as T;
   }
-  return (await res.json()) as T;
+  throw new Error("The dinosaur service is taking longer than expected. Please try again.");
 }
 
 // ---- Endpoints ----

@@ -17,3 +17,7 @@ dino_stats.csv
 frountend/.env
 frountend/node_modules/
 frountend/dist/
+.vercel/
+frountend/.vercel/
+.vercel
+.env*
